@@ -1,0 +1,3 @@
+airpressure halfladen 2,4
+airpressure fullyladen 2,8
+airpressure sparewheel 4,2

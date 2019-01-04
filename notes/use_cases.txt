@@ -1,0 +1,12 @@
+Use cases:
+
+ -- Specify air pressure for wheels
+ -- Specify data for oil change
+ -- Specify kilometers and date of purchase
+ -- Specify name of car
+ -- Specify number plate
+ -- CRUD infos of future dates like next oil change or change of drive belt (Zahnriemen)
+
+ -- CRUD comments like check for water, oil and stuff
+ -- CRUD entries for tank log
+ -- CRUD special oil change entry
