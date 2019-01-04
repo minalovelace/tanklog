@@ -218,6 +218,8 @@ public class TanklogModel {
 				if (consumptionForMonth != null) {
 					consumptionForMonthFormatted = _decimalFormat.format(consumptionForMonth);
 					consumptionForYear = consumptionForYear.add(consumptionForMonth);
+				} else {
+					consumptionForMonthFormatted = _decimalFormat.format(BigDecimal.ZERO);
 				}
 
 				TanklogYearStatisticsEntry entry = new TanklogYearStatisticsEntry(_decimalFormat.format(literForMonth),
