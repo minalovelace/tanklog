@@ -3,11 +3,13 @@ package de.tanklog.model;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -24,6 +26,7 @@ public class TanklogModel {
 	private final Map<LocalDate, TanklogOilchangeEntry> _oilchangeEntries = new HashMap<>();
 	private final Map<LocalDate, String> _wookEntries = new HashMap<>();
 	private final Map<Integer, TanklogYearStatistics> _tanklogYearStatistics = new HashMap<>();
+	private final NumberFormat _numberFormat = NumberFormat.getNumberInstance(Locale.GERMANY);
 	private final DecimalFormat _decimalFormat = new DecimalFormat("####0.00");
 
 	private String _carname = _noEntry;
@@ -223,7 +226,7 @@ public class TanklogModel {
 				}
 
 				TanklogYearStatisticsEntry entry = new TanklogYearStatisticsEntry(_decimalFormat.format(literForMonth),
-						String.valueOf(kilometerForMonth), consumptionForMonthFormatted, repairs);
+						_numberFormat.format(kilometerForMonth), consumptionForMonthFormatted, repairs);
 
 				entries.put(intMonth, entry);
 				kilometerForYear += kilometerForMonth;
@@ -231,7 +234,7 @@ public class TanklogModel {
 			}
 
 			TanklogYearStatistics statistics = new TanklogYearStatistics(_decimalFormat.format(literForYear),
-					String.valueOf(kilometerForYear), _decimalFormat.format(consumptionForYear));
+					_numberFormat.format(kilometerForYear), _decimalFormat.format(consumptionForYear));
 
 			statistics.setStatisticsForMonths(entries);
 			_tanklogModel._tanklogYearStatistics.put(intYear, statistics);
