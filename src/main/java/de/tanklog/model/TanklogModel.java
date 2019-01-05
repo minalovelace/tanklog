@@ -21,7 +21,7 @@ public class TanklogModel {
 	private final String _noEntry = "kein Eintrag";
 	private final String _wook = "Wasser, Öl etc. in Ordnung";
 	private final ArrayList<String> _notes = new ArrayList<>();
-	private final Map<LocalDate, TanklogEntry> _entries = new HashMap<>();
+	private final Map<TanklogEntryKey, TanklogEntry> _entries = new HashMap<>();
 	private final Map<LocalDate, String> _garageEntries = new HashMap<>();
 	private final Map<LocalDate, TanklogOilchangeEntry> _oilchangeEntries = new HashMap<>();
 	private final Map<LocalDate, String> _wookEntries = new HashMap<>();
@@ -107,7 +107,8 @@ public class TanklogModel {
 	public ArrayList<String> getUniqueDescendingYears() {
 		ArrayList<Integer> resultAsInt = new ArrayList<>();
 
-		List<Integer> entries = _entries.keySet().stream().map(k -> k.getYear()).collect(Collectors.toList());
+		List<Integer> entries = _entries.keySet().stream().map(k -> k.getLocalDate().getYear())
+				.collect(Collectors.toList());
 		List<Integer> garageEntries = _garageEntries.keySet().stream().map(k -> k.getYear())
 				.collect(Collectors.toList());
 		List<Integer> oilchangeEntries = _oilchangeEntries.keySet().stream().map(k -> k.getYear())
@@ -127,8 +128,8 @@ public class TanklogModel {
 		ArrayList<Integer> resultAsInt = new ArrayList<>();
 
 		int yearAsInt = Integer.parseInt(year);
-		List<Integer> entries = _entries.keySet().stream().filter(k -> k.getYear() == yearAsInt)
-				.map(k -> k.getMonthValue()).collect(Collectors.toList());
+		List<Integer> entries = _entries.keySet().stream().filter(k -> k.getLocalDate().getYear() == yearAsInt)
+				.map(k -> k.getLocalDate().getMonthValue()).collect(Collectors.toList());
 		List<Integer> garageEntries = _garageEntries.keySet().stream().filter(k -> k.getYear() == yearAsInt)
 				.map(k -> k.getMonthValue()).collect(Collectors.toList());
 		List<Integer> oilchangeEntries = _oilchangeEntries.keySet().stream().filter(k -> k.getYear() == yearAsInt)
@@ -144,8 +145,20 @@ public class TanklogModel {
 		return result;
 	}
 
-	public HashMap<Integer, TanklogEntry> getEntriesForMonth(String year, String month) {
-		return getEntriesForMonthImpl(year, month, _entries.entrySet());
+	public HashMap<TanklogEntryKey, TanklogEntry> getEntriesForMonth(String year, String month) {
+		int intYear = Integer.parseInt(year);
+		int intMonth = Integer.parseInt(month);
+		HashMap<TanklogEntryKey, TanklogEntry> result = new HashMap<>();
+		for (Entry<TanklogEntryKey, TanklogEntry> entry : _entries.entrySet()) {
+			LocalDate actualLocalDate = entry.getKey().getLocalDate();
+			boolean isYear = actualLocalDate.getYear() == intYear;
+			boolean isMonth = actualLocalDate.getMonthValue() == intMonth;
+			if (isYear & isMonth) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return result;
 	}
 
 	public HashMap<Integer, String> getGarageEntriesForMonth(String year, String month) {
@@ -241,7 +254,7 @@ public class TanklogModel {
 		}
 
 		private BigDecimal calculateCumulatedLiterForMonth(String year, String month) {
-			HashMap<Integer, TanklogEntry> entriesForMonth = _tanklogModel.getEntriesForMonth(year, month);
+			HashMap<TanklogEntryKey, TanklogEntry> entriesForMonth = _tanklogModel.getEntriesForMonth(year, month);
 			BigDecimal cumulatedLiter = BigDecimal.ZERO;
 			for (TanklogEntry entry : entriesForMonth.values()) {
 				cumulatedLiter = cumulatedLiter.add(entry.getLiter());
@@ -251,7 +264,7 @@ public class TanklogModel {
 		}
 
 		private Integer calculateCumulatedKilometerForMonth(String year, String month) {
-			HashMap<Integer, TanklogEntry> entriesForMonth = _tanklogModel.getEntriesForMonth(year, month);
+			HashMap<TanklogEntryKey, TanklogEntry> entriesForMonth = _tanklogModel.getEntriesForMonth(year, month);
 			Integer cumulatedKilometer = entriesForMonth.values().stream().filter(e -> e.getDrivenKilometer() != null)
 					.mapToInt(e -> e.getDrivenKilometer()).sum();
 			return cumulatedKilometer;
@@ -313,12 +326,12 @@ public class TanklogModel {
 				return;
 			}
 
-			SortedMap<LocalDate, Integer> sortedKilometer = new TreeMap<LocalDate, Integer>();
-			for (Entry<LocalDate, TanklogEntry> entry : _tanklogModel._entries.entrySet()) {
+			SortedMap<TanklogEntryKey, Integer> sortedKilometer = new TreeMap<>();
+			for (Entry<TanklogEntryKey, TanklogEntry> entry : _tanklogModel._entries.entrySet()) {
 				sortedKilometer.put(entry.getKey(), entry.getValue().getKilometer());
 			}
 
-			SortedMap<LocalDate, Integer> sortedOilchangeEntries = new TreeMap<LocalDate, Integer>();
+			SortedMap<LocalDate, Integer> sortedOilchangeEntries = new TreeMap<>();
 			for (Entry<LocalDate, TanklogOilchangeEntry> entry : _tanklogModel._oilchangeEntries.entrySet()) {
 				sortedOilchangeEntries.put(entry.getKey(), entry.getValue().getOilchangeKilometer());
 			}
@@ -329,10 +342,10 @@ public class TanklogModel {
 			Integer previousKilometer = Integer.valueOf(kilometerAtPurchase.replaceAll("[.,]", ""));
 			LocalDate nextDate;
 			Integer nextKilometer;
-			for (Entry<LocalDate, Integer> entry : sortedKilometer.entrySet()) {
-				nextDate = entry.getKey();
+			for (Entry<TanklogEntryKey, Integer> entry : sortedKilometer.entrySet()) {
+				nextDate = entry.getKey().getLocalDate();
 				nextKilometer = entry.getValue();
-				TanklogEntry tanklogEntry = _tanklogModel._entries.get(nextDate);
+				TanklogEntry tanklogEntry = _tanklogModel._entries.get(entry.getKey());
 				tanklogEntry.setDrivenKilometer(nextKilometer - previousKilometer);
 
 				for (LocalDate oilchangeEntryDate : sortedOilchangeEntries.keySet()) {
@@ -390,8 +403,11 @@ public class TanklogModel {
 
 		public TanklogModelFactory setEntry(String date, String price, String liter, String kilometer) {
 			LocalDate parsedDate = parseDate(date);
-			TanklogEntry tanklogEntry = new TanklogEntry(price, liter, kilometer);
-			_tanklogModel._entries.put(parsedDate, tanklogEntry);
+			String sanitizedKilometer = kilometer.replaceAll("[.,]", "");
+			Integer intKilometer = Integer.parseInt(sanitizedKilometer);
+			TanklogEntryKey tanklogEntryKey = new TanklogEntryKey(parsedDate, intKilometer);
+			TanklogEntry tanklogEntry = new TanklogEntry(price, liter, intKilometer);
+			_tanklogModel._entries.put(tanklogEntryKey, tanklogEntry);
 			return this;
 		}
 

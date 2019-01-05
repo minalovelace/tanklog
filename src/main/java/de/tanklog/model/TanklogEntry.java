@@ -15,11 +15,10 @@ public class TanklogEntry {
 	private Integer _drivenKilometer;
 	private Integer _oilKilometer;
 
-	public TanklogEntry(String price, String liter, String kilometer) {
+	public TanklogEntry(String price, String liter, Integer kilometer) {
 		_price = new BigDecimal(price.replaceAll(",", "."));
 		_liter = new BigDecimal(liter.replaceAll(",", "."));
-		String sanitizedKilometer = kilometer.replaceAll("[.,]", "");
-		_kilometer = Integer.parseInt(sanitizedKilometer);
+		_kilometer = kilometer;
 	}
 
 	public BigDecimal getPrice() {

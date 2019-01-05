@@ -9,6 +9,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import de.tanklog.model.TanklogEntry;
+import de.tanklog.model.TanklogEntryKey;
 import de.tanklog.model.TanklogModel;
 import de.tanklog.model.TanklogOilchangeEntry;
 import de.tanklog.model.TanklogPurchaseDetail;
@@ -89,17 +90,21 @@ public class TanklogWriterLatexDocument {
 	}
 
 	private void writeEntriesForMonth(StringBuilder sb, TanklogModel model, String year, String month) {
-		HashMap<Integer, TanklogEntry> entries = model.getEntriesForMonth(year, month);
+		HashMap<TanklogEntryKey, TanklogEntry> entries = model.getEntriesForMonth(year, month);
 		HashMap<Integer, String> garageEntries = model.getGarageEntriesForMonth(year, month);
 		HashMap<Integer, TanklogOilchangeEntry> oilchangeEntries = model.getOilchangeEntriesForMonth(year, month);
 		HashMap<Integer, String> wookEntries = model.getWookEntriesForMonth(year, month);
 		SortedMap<BigDecimal, String> weightedEntries = new TreeMap<BigDecimal, String>();
 
-		for (Entry<Integer, TanklogEntry> entry : entries.entrySet()) {
+		for (Entry<TanklogEntryKey, TanklogEntry> entry : entries.entrySet()) {
 			BigDecimal weight = new BigDecimal("0.1");
-			BigDecimal key = new BigDecimal(entry.getKey()).add(weight);
+			TanklogEntryKey tanklogEntryKey = entry.getKey();
+			BigDecimal adjustedEntryWeight = new BigDecimal(tanklogEntryKey.getKilometer()).scaleByPowerOfTen(-15);
+			Integer tanklogDayOfMonth = tanklogEntryKey.getLocalDate().getDayOfMonth();
+			BigDecimal key = new BigDecimal(tanklogDayOfMonth ).add(weight)
+					.add(adjustedEntryWeight);
 			TanklogEntry tanklogEntry = entry.getValue();
-			String value = entry.getKey() + ". & " + tanklogEntry.getFormattedKilometer() + " & "
+			String value = tanklogDayOfMonth + ". & " + tanklogEntry.getFormattedKilometer() + " & "
 					+ tanklogEntry.getFormattedLiter() + " & " + tanklogEntry.getFormattedPrice() + " & "
 					+ tanklogEntry.getFormattedOilKilometer() + " & " + tanklogEntry.getFormattedDrivenKilometer()
 					+ " \\\\";

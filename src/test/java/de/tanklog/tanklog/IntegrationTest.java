@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 import de.tanklog.model.TanklogEntry;
+import de.tanklog.model.TanklogEntryKey;
 import de.tanklog.model.TanklogModel;
 import de.tanklog.model.TanklogOilchangeEntry;
 import de.tanklog.model.TanklogYearStatistics;
@@ -70,9 +71,10 @@ public class IntegrationTest {
 
 	private void assertEntriesWithOilchange(TanklogModel tanklogModel) {
 		assertSimpleEntries(tanklogModel);
-		HashMap<Integer, TanklogEntry> entriesForMonth = tanklogModel.getEntriesForMonth("1986", "11");
-		TanklogEntry actualEntry = entriesForMonth.get(22);
-		TanklogEntry expectedEntry = new TanklogEntry("23.98", "27.99", "23.985");
+		HashMap<TanklogEntryKey, TanklogEntry> entriesForMonth = tanklogModel.getEntriesForMonth("1986", "11");
+		TanklogEntryKey expectedTanklogEntryKey = new TanklogEntryKey(LocalDate.of(1986, 11, 22), 23_985);
+		TanklogEntry actualEntry = entriesForMonth.get(expectedTanklogEntryKey);
+		TanklogEntry expectedEntry = new TanklogEntry("23.98", "27.99", 23_985);
 		expectedEntry.setDrivenKilometer(250);
 		expectedEntry.setOilKilometer(185);
 		assertEntry(expectedEntry, actualEntry);
@@ -134,23 +136,26 @@ public class IntegrationTest {
 	}
 
 	private void assertSimpleEntries(TanklogModel tanklogModel) {
-		HashMap<Integer, TanklogEntry> actualEntries = tanklogModel.getEntriesForMonth("1986", "10");
+		HashMap<TanklogEntryKey, TanklogEntry> actualEntries = tanklogModel.getEntriesForMonth("1986", "10");
 		assertEquals(3, actualEntries.size());
 
-		TanklogEntry expectedEntry13 = new TanklogEntry("45.98", "35.99", "23.420");
+		TanklogEntry expectedEntry13 = new TanklogEntry("45.98", "35.99", 23_420);
 		expectedEntry13.setDrivenKilometer(5);
 		expectedEntry13.setOilKilometer(5);
-		TanklogEntry actualEntry13 = actualEntries.get(13);
+		TanklogEntryKey expectedEntryKey13 = new TanklogEntryKey(LocalDate.of(1986, 10, 13), 23_420);
+		TanklogEntry actualEntry13 = actualEntries.get(expectedEntryKey13);
 		assertEntry(expectedEntry13, actualEntry13);
-		TanklogEntry actualEntry15 = actualEntries.get(15);
-		TanklogEntry expectedEntry15 = new TanklogEntry("5.98", "5.99", "23.520");
+		TanklogEntry expectedEntry15 = new TanklogEntry("5.98", "5.99", 23_520);
 		expectedEntry15.setDrivenKilometer(100);
 		expectedEntry15.setOilKilometer(105);
+		TanklogEntryKey expectedEntryKey15 = new TanklogEntryKey(LocalDate.of(1986, 10, 15), 23_520);
+		TanklogEntry actualEntry15 = actualEntries.get(expectedEntryKey15);
 		assertEntry(expectedEntry15, actualEntry15);
-		TanklogEntry actualEntry25 = actualEntries.get(25);
-		TanklogEntry expectedEntry25 = new TanklogEntry("25.98", "25.99", "23.735");
+		TanklogEntry expectedEntry25 = new TanklogEntry("25.98", "25.99", 23_735);
 		expectedEntry25.setDrivenKilometer(215);
 		expectedEntry25.setOilKilometer(320);
+		TanklogEntryKey expectedEntryKey25 = new TanklogEntryKey(LocalDate.of(1986, 10, 25), 23_735);
+		TanklogEntry actualEntry25 = actualEntries.get(expectedEntryKey25);
 		assertEntry(expectedEntry25, actualEntry25);
 	}
 
