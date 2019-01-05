@@ -207,23 +207,15 @@ public class TanklogModel {
 			ArrayList<String> months = _tanklogModel.getUniqueDescendingMonthsFor(year);
 			Integer kilometerForYear = 0;
 			BigDecimal literForYear = BigDecimal.ZERO;
-			BigDecimal consumptionForYear = BigDecimal.ZERO;
 			TreeMap<Integer, TanklogYearStatisticsEntry> entries = new TreeMap<>();
 			for (String month : months) {
 				Integer intMonth = Integer.valueOf(month);
 				Integer kilometerForMonth = calculateCumulatedKilometerForMonth(year, month);
 				BigDecimal literForMonth = calculateCumulatedLiterForMonth(year, month);
-				BigDecimal consumptionForMonth = calculateCumulatedConsumptionForMonth(literForMonth,
-						kilometerForMonth);
+				BigDecimal consumptionForMonth = calculateCumulatedConsumption(literForMonth, kilometerForMonth);
 				ArrayList<String> repairs = getFormattedRepairsForMonth(year, month);
 
-				String consumptionForMonthFormatted = null;
-				if (consumptionForMonth != null) {
-					consumptionForMonthFormatted = _decimalFormat.format(consumptionForMonth);
-					consumptionForYear = consumptionForYear.add(consumptionForMonth);
-				} else {
-					consumptionForMonthFormatted = _decimalFormat.format(BigDecimal.ZERO);
-				}
+				String consumptionForMonthFormatted = formatCumulatedConsumption(consumptionForMonth);
 
 				TanklogYearStatisticsEntry entry = new TanklogYearStatisticsEntry(_decimalFormat.format(literForMonth),
 						_numberFormat.format(kilometerForMonth), consumptionForMonthFormatted, repairs);
@@ -233,11 +225,19 @@ public class TanklogModel {
 				literForYear = literForYear.add(literForMonth);
 			}
 
+			BigDecimal consumptionForYear = calculateCumulatedConsumption(literForYear, kilometerForYear);
 			TanklogYearStatistics statistics = new TanklogYearStatistics(_decimalFormat.format(literForYear),
-					_numberFormat.format(kilometerForYear), _decimalFormat.format(consumptionForYear));
+					_numberFormat.format(kilometerForYear), formatCumulatedConsumption(consumptionForYear));
 
 			statistics.setStatisticsForMonths(entries);
 			_tanklogModel._tanklogYearStatistics.put(intYear, statistics);
+		}
+
+		private String formatCumulatedConsumption(BigDecimal consumptionForMonth) {
+			if (consumptionForMonth != null)
+				return _decimalFormat.format(consumptionForMonth);
+
+			return _decimalFormat.format(BigDecimal.ZERO);
 		}
 
 		private BigDecimal calculateCumulatedLiterForMonth(String year, String month) {
@@ -257,8 +257,7 @@ public class TanklogModel {
 			return cumulatedKilometer;
 		}
 
-		private BigDecimal calculateCumulatedConsumptionForMonth(BigDecimal cumulatedLiter,
-				Integer cumulatedKilometer) {
+		private BigDecimal calculateCumulatedConsumption(BigDecimal cumulatedLiter, Integer cumulatedKilometer) {
 			if (cumulatedKilometer == 0) {
 				return null;
 			}
