@@ -3,6 +3,7 @@ package de.tanklog.tanklog;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,7 +28,8 @@ public class App {
 		Path destinationFolder = environment.getDestinationFolder();
 		File destinationFile = Paths.get(destinationFolder.toString(), "tanklog.tex").toFile();
 		destinationFile.createNewFile();
-		Files.write(destinationFile.toPath(), document.getBytes());
-		PdfGenerator.generatePdf(destinationFile);
+		Files.write(destinationFile.toPath(), document.getBytes(StandardCharsets.UTF_8));
+		String pdfLaTeXLocation = environment.getPdfLaTeXLocation();
+		PdfGenerator.generatePdf(destinationFile, pdfLaTeXLocation);
 	}
 }

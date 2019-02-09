@@ -4,22 +4,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 public class Environment {
 	private final String _textFileEnding = ".txt";
 	private final String _inputFolderName = "input";
 	private final String _outputFolderName = "output";
+	private final String _configFilename = "tanklog.config";
 	private final String _readmeFilename = "README.md";
+	private final String _liesmichFilename = "LIESMICH.md";
 
 	/**
 	 * Check if input and output folder exist and create them if they don't exist.
-	 * Create a readme file in the same folder as the jar.
+	 * Create a readme and liesmich file in the same folder as the jar.
 	 * 
 	 * @return true if the input folder has been created; otherwise false
 	 * 
@@ -30,15 +33,28 @@ public class Environment {
 		boolean result = inputFolderPath.toFile().mkdir();
 		Path outputFolderPath = Paths.get(_outputFolderName);
 		outputFolderPath.toFile().mkdir();
-		copyReadme();
+		copyFile(_configFilename);
+		copyFile(_readmeFilename);
+		copyFile(_liesmichFilename);
 		return result;
 	}
 
-	private void copyReadme() throws IOException {
+	private void copyFile(String fileName) throws IOException {
 		ClassLoader classLoader = getClass().getClassLoader();
-		InputStream in = classLoader.getResourceAsStream(_readmeFilename);
-		Path targetReadmePath = Paths.get(_readmeFilename);
-		Files.copy(in, targetReadmePath, StandardCopyOption.REPLACE_EXISTING);
+		InputStream in = classLoader.getResourceAsStream(fileName);
+		Path targetPath = Paths.get(fileName);
+		try {
+			Files.copy(in, targetPath);
+		} catch (FileAlreadyExistsException e) {
+			// nothing to do
+		}
+	}
+
+	public String getPdfLaTeXLocation() throws IOException {
+		Path configFilePath = Paths.get(_configFilename);
+		List<String> lines = Files.readAllLines(configFilePath);
+		String result = lines.get(0);
+		return result;
 	}
 
 	public InputStream openInputStream() throws IOException {

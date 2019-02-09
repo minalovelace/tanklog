@@ -7,12 +7,11 @@ import java.util.concurrent.TimeUnit;
 
 public class PdfGenerator {
 	private static final long WAIT_FOR_PDFLATEX_SEC = 60;
-	private static final String PDFLATEX_LOCATION = "/Library/TeX/texbin/pdflatex";
 	private static final String PDFLATEX_ARG = "-halt-on-error";
 	private static final String PDFLATEX_LOG_FILENAME = "pdflatex.log";
 
-	public static void generatePdf(File file) throws IOException {
-		ProcessBuilder pb = new ProcessBuilder(Paths.get(PDFLATEX_LOCATION).toAbsolutePath().toString(), PDFLATEX_ARG,
+	public static void generatePdf(File file, String pdfLaTeXLocation) throws IOException {
+		ProcessBuilder pb = new ProcessBuilder(Paths.get(pdfLaTeXLocation).toAbsolutePath().toString(), PDFLATEX_ARG,
 				file.getAbsolutePath());
 		pb.directory(file.getParentFile());
 		pb.redirectErrorStream(true);
